@@ -981,6 +981,9 @@ int main(int argc, char* argv[]) {
             } else {
                 inputFileNames[i] = argv[optind++];
             }
+	    if (verbose >= VERBOSE_DEBUG) {
+		printf("added input file %s\n", inputFileNames[i]);
+	    }
 
             if ( inputFileNames[i] != NULL ) {
                 struct stat statBuf;
@@ -997,7 +1000,10 @@ int main(int argc, char* argv[]) {
         }
         if ( inputWildcard )
             optind++;
-
+	
+	if(optind >= argc) { // see if any one of the last two optind++ has pushed it over the array boundary
+		errOutput("not enough output files given.");
+	}
         bool outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
         for(int i = 0; i < outputCount; i++) {
             if ( outputWildcard ) {
@@ -1005,10 +1011,13 @@ int main(int argc, char* argv[]) {
                 outputFileNames[i] = outputFilesBuffer[i];
             } else if ( optind >= argc ) {
                 errOutput("not enough output files given.");
-                return -1;
             } else {
                 outputFileNames[i] = argv[optind++];
             }
+	    if (verbose >= VERBOSE_DEBUG) {
+		printf("added output file %s\n", outputFileNames[i]);
+	    }
+	    
 
             if ( ! overwrite ) {
                 struct stat statbuf;
@@ -1041,11 +1050,13 @@ int main(int argc, char* argv[]) {
             }
 
             // load input image(s)
+            // if --input-pages == 2 combine two files onto one image (called sheet)
             for (int j = 0; j < inputCount; j++) {
                 if (inputFileNames[j] != NULL) { // may be null if --insert-blank or --replace-blank
                     if (verbose >= VERBOSE_MORE)
                         printf("loading file %s.\n", inputFileNames[j]);
 
+                    // allocate buffer for page
                     loadImage(inputFileNames[j], &page);
                     saveDebug("_loaded_%d.pnm", inputNr-inputCount+j, page);
 
@@ -1091,6 +1102,8 @@ int main(int argc, char* argv[]) {
                     saveDebug("_before_center_page%d.pnm", inputNr-inputCount+j, sheet);
 
                     centerImage(page, (w * j / inputCount), 0, (w / inputCount), h, sheet);
+                    // the page is copied onto the sheet so we can free the buffer again.
+                    av_frame_free(&page);
 
                     saveDebug("_after_center_page%d.pnm", inputNr-inputCount+j, sheet);
                 }

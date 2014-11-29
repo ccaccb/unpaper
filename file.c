@@ -51,12 +51,14 @@ void loadImage(const char *filename, AVFrame **image) {
     if (!avctx)
         errOutput("cannot allocate a new context");
 
+    // avformat_open_input allocates buffer for AVFormatContext (=s) itself
     ret = avformat_open_input(&s, filename, NULL, NULL);
     if (ret < 0) {
         av_strerror(ret, errbuff, sizeof(errbuff));
         errOutput("unable to open file %s: %s", filename, errbuff);
     }
 
+    // avformat_find_stream_info() pre-reads stuff from the stream
     avformat_find_stream_info(s, NULL);
 
     if (verbose >= VERBOSE_MORE)
@@ -68,6 +70,7 @@ void loadImage(const char *filename, AVFrame **image) {
     if (s->streams[0]->codec->codec_type != AVMEDIA_TYPE_VIDEO)
         errOutput("unable to open file %s: wrong stream", filename);
 
+    // avcodec_copy_context() doesn't allocate new memory as avctx is only initialized in vcodec_alloc_context3()
     ret = avcodec_copy_context(avctx, s->streams[0]->codec);
     if (ret < 0) {
         av_strerror(ret, errbuff, sizeof(errbuff));
@@ -99,6 +102,10 @@ void loadImage(const char *filename, AVFrame **image) {
         errOutput("unable to open file %s: %s", filename, errbuff);
     }
 
+    if (got_frame == 0) {
+        errOutput("decodig of file completed but no frame was found. Maybe the file is corrupted?");
+    }
+
     switch(frame->format) {
     case AV_PIX_FMT_Y400A: // 8-bit grayscale PNG
     case AV_PIX_FMT_GRAY8:
@@ -118,6 +125,8 @@ void loadImage(const char *filename, AVFrame **image) {
                 setPixel(palette[palette_index], x, y, *image);
             }
         }
+        // now we need to free the frame, because the buffer for image is already allocated in initImage
+        av_frame_free(&frame);
         break;
 
     default:
@@ -135,6 +144,7 @@ void loadImage(const char *filename, AVFrame **image) {
  * @return true on success, false on failure
  */
 void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
+    bool image_ptr_overwritten = false;
     AVOutputFormat *fmt = NULL;
     enum AVCodecID output_codec = -1;
     AVCodec *codec;
@@ -172,14 +182,18 @@ void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
         outputPixFmt = AV_PIX_FMT_MONOWHITE;
         output_codec = AV_CODEC_ID_PBM;
         break;
+    default:
+        errOutput("unknown output pixel format.");
     }
 
     if ( image->format != outputPixFmt ) {
+        // create new frame with output pixel format
         AVFrame *output;
         initImage(&output, image->width, image->height,
                   outputPixFmt, -1);
         copyImageArea(0, 0, image->width, image->height,
                       image, 0, 0, output);
+        image_ptr_overwritten = true;
         image = output;
     }
 
@@ -237,6 +251,11 @@ void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
 
     avio_close(out_ctx->pb);
     av_free(out_ctx);
+
+    if(image_ptr_overwritten) {
+        // image* has been overwritten by temporary image
+        av_frame_free(&image);
+    }
 }
 
 /**
