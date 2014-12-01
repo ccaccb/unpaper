@@ -81,6 +81,9 @@ void loadImage(const char *filename, AVFrame **image) {
     if (!codec)
         errOutput("unable to open file %s: unsupported format", filename);
 
+    // use only one thread to decode. This fixes an error when opening compressed images
+    // see: https://www.mail-archive.com/libav-user@ffmpeg.org/msg07483.html
+    avctx->thread_count = 1;
     ret = avcodec_open2(avctx, codec, NULL);
     if (ret < 0) {
         av_strerror(ret, errbuff, sizeof(errbuff));
@@ -96,6 +99,8 @@ void loadImage(const char *filename, AVFrame **image) {
     if (pkt.stream_index != 0)
         errOutput("unable to open file %s: invalid stream.", filename);
 
+    // refcounted frames allow for the stream to be closed and they persist
+    avctx->refcounted_frames = 1;
     ret = avcodec_decode_video2(avctx, frame, &got_frame, &pkt);
     if (ret < 0) {
         av_strerror(ret, errbuff, sizeof(errbuff));
@@ -132,6 +137,19 @@ void loadImage(const char *filename, AVFrame **image) {
     default:
         errOutput("unable to open file %s: unsupported pixel format", filename);
     }
+
+    // free the buffer in the packet. It should be stored in the frame now
+    // the buffer in the packet was allocated in avformat_find_stream_info()
+    av_free_packet(&pkt);
+
+    // close and free codec-assosiated data
+    avcodec_close(avctx);
+
+    // close and free input stream
+    avformat_close_input(&s);
+
+    // free codec context
+    avcodec_free_context(&avctx);
 }
 
 
@@ -242,18 +260,19 @@ void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
         errOutput("unable to write file %s: %s", filename, errbuff);
     }
     av_write_frame(out_ctx, &pkt);
-
     av_write_trailer(out_ctx);
+
+    // this flushes all buffers in the stream
+    avio_close(out_ctx->pb); 
+
+    // free the buffer in the packet
+    av_free_packet(&pkt);
+
     avcodec_close(codec_ctx);
+    avformat_free_context(out_ctx);
 
-    av_free(codec_ctx);
-    av_free(video_st);
-
-    avio_close(out_ctx->pb);
-    av_free(out_ctx);
-
+    // if we have overwritten the original image we need to free the temporary one
     if(image_ptr_overwritten) {
-        // image* has been overwritten by temporary image
         av_frame_free(&image);
     }
 }

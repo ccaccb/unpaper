@@ -187,6 +187,78 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
       </refsection>
 
       <refsection>
+        <title>Filtering Algorithms</title>
+        <para>
+          In order of execution:
+        </para>
+        
+        <variablelist>
+          <varlistentry>
+            <term><option>Blackfilter</option></term>
+            <listitem>
+              <para>
+                The blackfilter clears solid black areas in the image.
+                It works by moving a virtual bar across each page. The darkness inside the virtual bar is determined
+                and if it exceeds <option>blackfilter-scan-threshold</option> black pixels in the area are filled.
+                During filling the blackness of each pixel is determined by <option>black-threshold</option>.
+                The bar is then moved by <option>blackfilter-scan-step</option> in the scanning direction.
+                Once a page border is encountered the bar is moved down (horizontal scan)
+                or right (vertical scan) by its <option>blackfilter-scan-size</option>.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><option>Noisefilter</option></term>
+            <listitem>
+              <para>
+                The noisefilter removes lonely clusters of dark pixels. For each dark pixel in the image
+                <option>noisefilter-intensity</option> pixels in each direction are checked. If the total
+                number of dark pixels in that area is less than <option>noisefilter-intensity</option> the
+                pixel and its neighbors are cleared.
+                The option <option>white-threshold</option> determines when a pixel is counted as dark.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><option>Blurfilter</option></term>
+            <listitem>
+              <para>
+                The blurfilter removes lonely clusters of dark pixels.
+                It works by moving an area determined by <option>blurfilter-size</option> over the image.
+                The number of black pixels inside that area and those in the adjacent areas (top left, top right,
+                bottom left and bottom right) are counted. The maximal ratio of dark to white pixels is calculated.
+                If it is less than <option>blurfilter-intensity</option> then the area is cleared.
+                The option <option>white-threshold</option> determines when a pixel is counted as dark.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><option>Grayfilter</option></term>
+            <listitem>
+              <para>
+                The grayfilter cleares areas which only contain gray pixels.
+                It works by moving an area set by <option>grayfilter-size</option> in steps of
+                <option>grayfilter-step</option>across the image.
+                If the area contains no pixel darker than <option>dark-threshold</option>  AND if
+                the average darkness is lower than <option>grayfilter-threshold</option> then the area
+                is cleared.
+                WARNING: on colored images the grayfilter can erroneously remove bright colors.
+                In that case disable it using <option>--no-grayfilter</option>.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><option>Mask-Scan</option></term>
+            <listitem>
+              <para>
+                The mask scan
+              </para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </refsection>
+
+      <refsection>
         <title>Options</title>
 
         <variablelist>
@@ -562,13 +634,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
                 Directions in which to search for solidly black areas. Either <option>v</option>
                 (for vertical searching), <option>h</option> (for horizontal searching) or
                 <option>v,h</option> (for both) can be specified.
-                The blackfilter works by moving a virtual bar across each page.
-                The darkness inside the virtual bar is determined
-                and if it exceeds <option>blackfilter-scan-threshold</option> black pixels in the area are filled.
-                During filling the blackness of each pixel is determined by <option>black-threshold</option>.
-                The bar is then moved by <option>blackfilter-scan-step</option> in the scanning direction.
-                Once a page border is encountered the bar is moved down (horizontal scan) or right (vertical scan) by its <option>blackfilter-scan-size</option>.
-              </para>
+                </para>
             </listitem>
           </varlistentry>
 
