@@ -161,14 +161,14 @@ void loadImage(const char *filename, AVFrame **image) {
  * @param type filetype of the image to save
  * @return true on success, false on failure
  */
-void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
-    bool image_ptr_overwritten = false;
+void saveImage(char *filename, AVFrame *input, int outputPixFmt) {
     AVOutputFormat *fmt = NULL;
     enum AVCodecID output_codec = -1;
     AVCodec *codec;
     AVFormatContext *out_ctx;
     AVCodecContext *codec_ctx;
     AVStream *video_st;
+    AVFrame *output = input;
     int ret;
     char errbuff[1024];
 
@@ -200,19 +200,13 @@ void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
         outputPixFmt = AV_PIX_FMT_MONOWHITE;
         output_codec = AV_CODEC_ID_PBM;
         break;
-    default:
-        errOutput("unknown output pixel format.");
     }
 
-    if ( image->format != outputPixFmt ) {
-        // create new frame with output pixel format
-        AVFrame *output;
-        initImage(&output, image->width, image->height,
+    if ( input->format != outputPixFmt ) {
+        initImage(&output, input->width, input->height,
                   outputPixFmt, -1);
-        copyImageArea(0, 0, image->width, image->height,
-                      image, 0, 0, output);
-        image_ptr_overwritten = true;
-        image = output;
+        copyImageArea(0, 0, input->width, input->height,
+                      input, 0, 0, output);
     }
 
     codec = avcodec_find_encoder(output_codec);
@@ -226,9 +220,9 @@ void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
     }
 
     codec_ctx = video_st->codec;
-    codec_ctx->width = image->width;
-    codec_ctx->height = image->height;
-    codec_ctx->pix_fmt = image->format;
+    codec_ctx->width = output->width;
+    codec_ctx->height = output->height;
+    codec_ctx->pix_fmt = output->format;
     video_st->time_base.den = codec_ctx->time_base.den = 1;
     video_st->time_base.num = codec_ctx->time_base.num = 1;
 
@@ -253,13 +247,14 @@ void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
     av_init_packet(&pkt);
 
     /* encode the image */
-    ret = avcodec_encode_video2(video_st->codec, &pkt, image, &got_packet);
+    ret = avcodec_encode_video2(video_st->codec, &pkt, output, &got_packet);
 
     if (ret < 0) {
         av_strerror(ret, errbuff, sizeof(errbuff));
         errOutput("unable to write file %s: %s", filename, errbuff);
     }
     av_write_frame(out_ctx, &pkt);
+
     av_write_trailer(out_ctx);
 
     // this flushes all buffers in the stream
@@ -272,8 +267,8 @@ void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
     avformat_free_context(out_ctx);
 
     // if we have overwritten the original image we need to free the temporary one
-    if(image_ptr_overwritten) {
-        av_frame_free(&image);
+    if( input != output ) {
+        av_frame_free(&output);
     }
 }
 
