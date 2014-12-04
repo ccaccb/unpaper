@@ -1,8 +1,13 @@
-unpaper
-=======
+unpaper-ffmpeg
+==============
 
 Originally written by Jens Gulden — see AUTHORS for more information.
+Forked from Diego Elio Pettenò[5], who maintains a current version of unpaper.
 Licensed under GNU GPL v2 — see COPYING for more information.
+
+This is a unpaper fork for ffmpeg compability. There seem to be inconsistent/
+incompatible APIs for libav and ffmpeg and until there is a way to be agnostic
+to libav vs. ffmpeg I'll maintain this fork.
 
 Overview
 --------
@@ -33,23 +38,35 @@ See [further documentation][3] for the supported file formats notes.
 Dependencies
 ------------
 
-The only hard dependency of `unpaper` is [libav][4], which is used for
+The only hard dependency of `unpaper` is [ffmpeg][4], which is used for
 file input and output.
 
-At the time of writing, any version of libav can be used, and at least
-from version 9 it supports a superset of the file formats supported by
-`unpaper` before version 6.
+I have succesfully tested unpaper-ffmpeg with
+libavutil:	54. 7.100
+libavcodec: 	55. 1.100
+libavformat:	56. 4.101
+If there is a problem with a particular version of ffmpeg please
+create an issus.
 
-The yet to be released version 11 is recommended, once available, as
-it has better support for TIFF files, including a faster, less
-memory-consuming support for grayscale TIFF files, and support for
-grayscale and alpha files.
+The manpage is build using docbook[6].
+For faster and offline building a local copy of docbook should be used.
+It can be optained from http://sourceforge.net/projects/docbook.
+Otherwise the first line of Makefile.am contains a line which
+uses the current online version of docbook. Uncomment it to use that
+(requires working network and is slower).
 
 Building instructions
 ---------------------
 
 `unpaper` uses GNU Autotools for its build system, so you should be
-able to execute the same commands used for other software packages:
+able to execute the same commands used for other software packages.
+To create the initially used files it might be nessecary to call:
+
+    aclocal
+    automake --add-missing
+    autoconf
+
+and then:
 
     ./configure
     make
@@ -80,4 +97,6 @@ You can find more information on the [basic concepts][1] and the
 [1]: doc/basic-concepts.md
 [2]: doc/image-processing.md
 [3]: doc/file-formats.md
-[4]: https://libav.org/
+[4]: https://ffmpeg.org/
+[5]: https://www.flameeyes.eu/projects/unpaper
+[6]: http://docbook.sourceforge.net/

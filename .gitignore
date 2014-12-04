@@ -1,3 +1,4 @@
+docbook/
 *.o
 .deps
 Makefile
