@@ -16,13 +16,20 @@ int parseEdges(char *s);
 
 void printEdges(int d);
 
-void parseInts(char *s, int i[2]);
+void parseSingleInt(const char *s, int *i, const char *option);
+
+void parseInts(const char *s, int i[2], const char *option);
+
+void parse4Ints(const char *s, int *a, int *b, int *c, int *d,
+                const char *option);
 
 void parseSize(char *s, int i[2], int dpi);
 
 int parseColor(char *s);
 
-void parseFloats(char *s, float f[2]);
+void parseSingleFloat(const char *s, float *f, const char *option);
+
+void parseFloats(const char *s, float f[2], const char *option);
 
 char *implode(char *buf, const char *s[], int cnt);
 

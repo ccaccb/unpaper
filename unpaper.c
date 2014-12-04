@@ -189,10 +189,6 @@ int main(int argc, char *argv[]) {
   // --- local variables ---
   int w = -1;
   int h = -1;
-  int left;
-  int top;
-  int right;
-  int bottom;
   int previousWidth = -1;
   int previousHeight = -1;
   AVFrame *sheet = NULL;
@@ -392,19 +388,19 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0x7e:
-      sscanf(optarg, "%d", &startSheet);
+      parseSingleInt(optarg, &startSheet, long_options[option_index].name);
       break;
 
     case 0x7f:
-      sscanf(optarg, "%d", &endSheet);
+      parseSingleInt(optarg, &endSheet, long_options[option_index].name);
       break;
 
     case 0x80:
-      sscanf(optarg, "%d", &startInput);
+      parseSingleInt(optarg, &startInput, long_options[option_index].name);
       break;
 
     case 0x81:
-      sscanf(optarg, "%d", &startOutput);
+      parseSingleInt(optarg, &startOutput, long_options[option_index].name);
       break;
 
     case 'S':
@@ -426,7 +422,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0x83:
-      sscanf(optarg, "%d", &preRotate);
+      parseSingleInt(optarg, &preRotate, long_options[option_index].name);
       if ((preRotate != 0) && (abs(preRotate) != 90)) {
         fprintf(
             stderr,
@@ -436,7 +432,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0x84:
-      sscanf(optarg, "%d", &postRotate);
+      parseSingleInt(optarg, &postRotate, long_options[option_index].name);
       if ((postRotate != 0) && (abs(postRotate) != 90)) {
         fprintf(
             stderr,
@@ -464,16 +460,10 @@ int main(int argc, char *argv[]) {
 
     case 0x88:
       if (preMaskCount < MAX_MASKS) {
-        left = -1;
-        top = -1;
-        right = -1;
-        bottom = -1;
-        sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
-               &bottom); // x1, y1, x2, y2
-        preMask[preMaskCount][LEFT] = left;
-        preMask[preMaskCount][TOP] = top;
-        preMask[preMaskCount][RIGHT] = right;
-        preMask[preMaskCount][BOTTOM] = bottom;
+        parse4Ints(optarg, &preMask[preMaskCount][LEFT],
+                   &preMask[preMaskCount][TOP], &preMask[preMaskCount][RIGHT],
+                   &preMask[preMaskCount][BOTTOM],
+                   long_options[option_index].name);
         preMaskCount++;
       } else {
         fprintf(stderr,
@@ -499,18 +489,22 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'z':
-      sscanf(optarg, "%f", &zoomFactor);
+      parseSingleFloat(optarg, &zoomFactor, long_options[option_index].name);
       break;
 
     case 0x8c:
-      sscanf(optarg, "%f", &postZoomFactor);
+      parseSingleFloat(optarg, &postZoomFactor,
+                       long_options[option_index].name);
       break;
 
     case 'p':
       if (pointCount < MAX_POINTS) {
         int x = -1;
         int y = -1;
-        sscanf(optarg, "%d,%d", &x, &y);
+        if (sscanf(optarg, "%d,%d", &x, &y) < 2) {
+          errOutput("couldn't parse argument '%s' for option '%s'", optarg,
+                    long_options[option_index].name);
+        }
         point[pointCount][X] = x;
         point[pointCount][Y] = y;
         pointCount++;
@@ -524,16 +518,9 @@ int main(int argc, char *argv[]) {
 
     case 'm':
       if (maskCount < MAX_MASKS) {
-        left = -1;
-        top = -1;
-        right = -1;
-        bottom = -1;
-        sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
-               &bottom); // x1, y1, x2, y2
-        mask[maskCount][LEFT] = left;
-        mask[maskCount][TOP] = top;
-        mask[maskCount][RIGHT] = right;
-        mask[maskCount][BOTTOM] = bottom;
+        parse4Ints(optarg, &mask[maskCount][LEFT], &mask[maskCount][TOP],
+                   &mask[maskCount][RIGHT], &mask[maskCount][BOTTOM],
+                   long_options[option_index].name);
         maskValid[maskCount] = true;
         maskCount++;
       } else {
@@ -545,16 +532,9 @@ int main(int argc, char *argv[]) {
 
     case 'W':
       if (wipeCount < MAX_MASKS) {
-        left = -1;
-        top = -1;
-        right = -1;
-        bottom = -1;
-        sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
-               &bottom); // x1, y1, x2, y2
-        wipe[wipeCount][LEFT] = left;
-        wipe[wipeCount][TOP] = top;
-        wipe[wipeCount][RIGHT] = right;
-        wipe[wipeCount][BOTTOM] = bottom;
+        parse4Ints(optarg, &wipe[wipeCount][LEFT], &wipe[wipeCount][TOP],
+                   &wipe[wipeCount][RIGHT], &wipe[wipeCount][BOTTOM],
+                   long_options[option_index].name);
         wipeCount++;
       } else {
         fprintf(stderr,
@@ -565,16 +545,10 @@ int main(int argc, char *argv[]) {
 
     case 0x8d:
       if (preWipeCount < MAX_MASKS) {
-        left = -1;
-        top = -1;
-        right = -1;
-        bottom = -1;
-        sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
-               &bottom); // x1, y1, x2, y2
-        preWipe[preWipeCount][LEFT] = left;
-        preWipe[preWipeCount][TOP] = top;
-        preWipe[preWipeCount][RIGHT] = right;
-        preWipe[preWipeCount][BOTTOM] = bottom;
+        parse4Ints(optarg, &preWipe[preWipeCount][LEFT],
+                   &preWipe[preWipeCount][TOP], &preWipe[preWipeCount][RIGHT],
+                   &preWipe[preWipeCount][BOTTOM],
+                   long_options[option_index].name);
         preWipeCount++;
       } else {
         fprintf(stderr,
@@ -585,16 +559,10 @@ int main(int argc, char *argv[]) {
 
     case 0x8e:
       if (postWipeCount < MAX_MASKS) {
-        left = -1;
-        top = -1;
-        right = -1;
-        bottom = -1;
-        sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
-               &bottom); // x1, y1, x2, y2
-        postWipe[postWipeCount][LEFT] = left;
-        postWipe[postWipeCount][TOP] = top;
-        postWipe[postWipeCount][RIGHT] = right;
-        postWipe[postWipeCount][BOTTOM] = bottom;
+        parse4Ints(
+            optarg, &postWipe[postWipeCount][LEFT],
+            &postWipe[postWipeCount][TOP], &postWipe[postWipeCount][RIGHT],
+            &postWipe[postWipeCount][BOTTOM], long_options[option_index].name);
         postWipeCount++;
       } else {
         fprintf(
@@ -605,22 +573,23 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0x8f:
-      parseInts(optarg, middleWipe);
+      parseInts(optarg, middleWipe, long_options[option_index].name);
       break;
 
     case 'B':
-      sscanf(optarg, "%d,%d,%d,%d", &border[LEFT], &border[TOP], &border[RIGHT],
-             &border[BOTTOM]);
+      parse4Ints(optarg, &border[LEFT], &border[TOP], &border[RIGHT],
+                 &border[BOTTOM], long_options[option_index].name);
       break;
 
     case 0x90:
-      sscanf(optarg, "%d,%d,%d,%d", &preBorder[LEFT], &preBorder[TOP],
-             &preBorder[RIGHT], &preBorder[BOTTOM]);
+      parse4Ints(optarg, &preBorder[LEFT], &preBorder[TOP], &preBorder[RIGHT],
+                 &preBorder[BOTTOM], long_options[option_index].name);
       break;
 
     case 0x91:
-      sscanf(optarg, "%d,%d,%d,%d", &postBorder[LEFT], &postBorder[TOP],
-             &postBorder[RIGHT], &postBorder[BOTTOM]);
+      parse4Ints(optarg, &postBorder[LEFT], &postBorder[TOP],
+                 &postBorder[RIGHT], &postBorder[BOTTOM],
+                 long_options[option_index].name);
       break;
 
     case 0x92:
@@ -632,33 +601,29 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0x94:
-      parseInts(optarg, blackfilterScanSize);
+      parseInts(optarg, blackfilterScanSize, long_options[option_index].name);
       break;
 
     case 0x95:
-      parseInts(optarg, blackfilterScanDepth);
+      parseInts(optarg, blackfilterScanDepth, long_options[option_index].name);
       break;
 
     case 0x96:
-      parseInts(optarg, blackfilterScanStep);
+      parseInts(optarg, blackfilterScanStep, long_options[option_index].name);
       break;
 
     case 0x97:
-      sscanf(optarg, "%f", &blackfilterScanThreshold);
+      parseSingleFloat(optarg, &blackfilterScanThreshold,
+                       long_options[option_index].name);
       break;
 
     case 0x98:
       if (blackfilterExcludeCount < MAX_MASKS) {
-        left = -1;
-        top = -1;
-        right = -1;
-        bottom = -1;
-        sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
-               &bottom); // x1, y1, x2, y2
-        blackfilterExclude[blackfilterExcludeCount][LEFT] = left;
-        blackfilterExclude[blackfilterExcludeCount][TOP] = top;
-        blackfilterExclude[blackfilterExcludeCount][RIGHT] = right;
-        blackfilterExclude[blackfilterExcludeCount][BOTTOM] = bottom;
+        parse4Ints(optarg, &blackfilterExclude[blackfilterExcludeCount][LEFT],
+                   &blackfilterExclude[blackfilterExcludeCount][TOP],
+                   &blackfilterExclude[blackfilterExcludeCount][RIGHT],
+                   &blackfilterExclude[blackfilterExcludeCount][BOTTOM],
+                   long_options[option_index].name);
         blackfilterExcludeCount++;
       } else {
         fprintf(stderr,
@@ -669,7 +634,8 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0x99:
-      sscanf(optarg, "%d", &blackfilterIntensity);
+      parseSingleInt(optarg, &blackfilterIntensity,
+                     long_options[option_index].name);
       break;
 
     case 0x9a:
@@ -677,7 +643,8 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0x9b:
-      sscanf(optarg, "%d", &noisefilterIntensity);
+      parseSingleInt(optarg, &noisefilterIntensity,
+                     long_options[option_index].name);
       break;
 
     case 0x9c:
@@ -685,15 +652,16 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0x9d:
-      parseInts(optarg, blurfilterScanSize);
+      parseInts(optarg, blurfilterScanSize, long_options[option_index].name);
       break;
 
     case 0x9e:
-      parseInts(optarg, blurfilterScanStep);
+      parseInts(optarg, blurfilterScanStep, long_options[option_index].name);
       break;
 
     case 0x9f:
-      sscanf(optarg, "%f", &blurfilterIntensity);
+      parseSingleFloat(optarg, &blurfilterIntensity,
+                       long_options[option_index].name);
       break;
 
     case 0xa0:
@@ -701,15 +669,16 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0xa1:
-      parseInts(optarg, grayfilterScanSize);
+      parseInts(optarg, grayfilterScanSize, long_options[option_index].name);
       break;
 
     case 0xa2:
-      parseInts(optarg, grayfilterScanStep);
+      parseInts(optarg, grayfilterScanStep, long_options[option_index].name);
       break;
 
     case 0xa3:
-      sscanf(optarg, "%f", &grayfilterThreshold);
+      parseSingleFloat(optarg, &grayfilterThreshold,
+                       long_options[option_index].name);
       break;
 
     case 0xa4:
@@ -721,33 +690,39 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0xa6:
-      parseInts(optarg, maskScanSize);
+      parseInts(optarg, maskScanSize, long_options[option_index].name);
       break;
 
     case 0xa7:
-      parseInts(optarg, maskScanDepth);
+      parseInts(optarg, maskScanDepth, long_options[option_index].name);
       break;
 
     case 0xa8:
-      parseInts(optarg, maskScanStep);
+      parseInts(optarg, maskScanStep, long_options[option_index].name);
       break;
 
     case 0xa9:
-      parseFloats(optarg, maskScanThreshold);
+      parseFloats(optarg, maskScanThreshold, long_options[option_index].name);
       break;
 
     case 0xaa:
-      sscanf(optarg, "%d,%d", &maskScanMinimum[WIDTH],
-             &maskScanMinimum[HEIGHT]);
+      if (sscanf(optarg, "%d,%d", &maskScanMinimum[WIDTH],
+                 &maskScanMinimum[HEIGHT]) < 2) {
+        errOutput("couldn't parse argument '%s' for option '%s'", optarg,
+                  long_options[option_index].name);
+      }
       break;
 
     case 0xab:
-      sscanf(optarg, "%d,%d", &maskScanMaximum[WIDTH],
-             &maskScanMaximum[HEIGHT]);
+      if (sscanf(optarg, "%d,%d", &maskScanMaximum[WIDTH],
+                 &maskScanMaximum[HEIGHT]) < 2) {
+        errOutput("couldn't parse argument '%s' for option '%s'", optarg,
+                  long_options[option_index].name);
+      }
       break;
 
     case 0xac:
-      sscanf(optarg, "%d", &maskColor);
+      parseSingleInt(optarg, &maskColor, long_options[option_index].name);
       break;
 
     case 0xad:
@@ -763,23 +738,27 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0xb0:
-      sscanf(optarg, "%d", &deskewScanSize);
+      parseSingleInt(optarg, &deskewScanSize, long_options[option_index].name);
       break;
 
     case 0xb1:
-      sscanf(optarg, "%f", &deskewScanDepth);
+      parseSingleFloat(optarg, &deskewScanDepth,
+                       long_options[option_index].name);
       break;
 
     case 0xb2:
-      sscanf(optarg, "%f", &deskewScanRange);
+      parseSingleFloat(optarg, &deskewScanRange,
+                       long_options[option_index].name);
       break;
 
     case 0xb3:
-      sscanf(optarg, "%f", &deskewScanStep);
+      parseSingleFloat(optarg, &deskewScanStep,
+                       long_options[option_index].name);
       break;
 
     case 0xb4:
-      sscanf(optarg, "%f", &deskewScanDeviation);
+      parseSingleFloat(optarg, &deskewScanDeviation,
+                       long_options[option_index].name);
       break;
 
     case 0xb5:
@@ -791,15 +770,15 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0xb7:
-      parseInts(optarg, borderScanSize);
+      parseInts(optarg, borderScanSize, long_options[option_index].name);
       break;
 
     case 0xb8:
-      parseInts(optarg, borderScanStep);
+      parseInts(optarg, borderScanStep, long_options[option_index].name);
       break;
 
     case 0xb9:
-      parseInts(optarg, borderScanThreshold);
+      parseInts(optarg, borderScanThreshold, long_options[option_index].name);
       break;
 
     case 0xba:
@@ -823,11 +802,13 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'w':
-      sscanf(optarg, "%f", &whiteThreshold);
+      parseSingleFloat(optarg, &whiteThreshold,
+                       long_options[option_index].name);
       break;
 
     case 'b':
-      sscanf(optarg, "%f", &blackThreshold);
+      parseSingleFloat(optarg, &blackThreshold,
+                       long_options[option_index].name);
       break;
 
     case 0xbf:
@@ -881,7 +862,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0xc7:
-      sscanf(optarg, "%d", &dpi);
+      parseSingleInt(optarg, &dpi, long_options[option_index].name);
       break;
 
     case 't':
@@ -891,6 +872,10 @@ int main(int argc, char *argv[]) {
         outputPixFmt = AV_PIX_FMT_GRAY8;
       } else if (strcmp(optarg, "ppm") == 0) {
         outputPixFmt = AV_PIX_FMT_RGB24;
+      } else {
+        errOutput("unknown format '%s' for option '-t' or '--type'. Allowed "
+                  "types are pbm, pgm or ppm.",
+                  optarg);
       }
       break;
 
