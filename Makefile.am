@@ -40,9 +40,10 @@ TESTS = tests/runtestA1.sh tests/runtestB1.sh tests/runtestB2.sh	\
         tests/runtestE3.sh tests/runtestF1.sh tests/runtestF2.sh	\
         tests/runtestF3.sh tests/runtestG1.sh tests/runtestG2.sh	\
         tests/runtestG3.sh tests/runtestH1.sh tests/runtestH2.sh	\
-        tests/runtestH3.sh
+        tests/runtestH3.sh tests/NoInputFile.sh
 
-XFAIL_TESTS = tests/runtestG3.sh tests/runtestH2.sh tests/runtestH3.sh
+XFAIL_TESTS = tests/runtestG3.sh tests/runtestH2.sh tests/runtestH3.sh  \
+        tests/NoInputFile.sh
 
 EXTRA_DIST = $(TESTS) tests/imgsrc001.png tests/imgsrc002.png           \
              tests/imgsrc003.png tests/imgsrc004.png                    \
@@ -85,7 +86,8 @@ CLEANFILES = tests/.dirstamp tests/resultsA1.pbm tests/resultsB1.ppm    \
 	     tests/resultsH205.pbm tests/resultsH206.pbm                \
 	     tests/resultsH301.pbm tests/resultsH302.pbm                \
 	     tests/resultsH303.pbm tests/resultsH304.pbm                \
-	     tests/resultsH305.pbm tests/resultsH306.pbm
+	     tests/resultsH305.pbm tests/resultsH306.pbm                \
+	     tests/resultsNoInputFile.pbm
 
 %.1: %.1.xml
 	$(AM_V_GEN)$(XSLTPROC) \
